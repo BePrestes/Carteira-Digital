@@ -17,6 +17,7 @@ const abasEl = document.querySelectorAll('.aba');
 const periodoEl = document.getElementById('filtro-periodo');
 const btnDepositoEl = document.getElementById('btn-deposito');
 const btnCadastroEl = document.getElementById('btn-cadastro');
+
 let transferencias = [];
 let filtroTipo = 'todas';
 let usuarios = [];
@@ -27,15 +28,14 @@ function formatarMoeda(valor) {
         currency: 'BRL'
     });
 }
-
 function mostrarMensagem(texto, tipo) {
     mensagemEl.textContent = texto;
     mensagemEl.className = 'mensagem ' + tipo;
+
 }
 
 async function carregarUsuarios(idParaSelecionar) {
     const selecionado = idParaSelecionar || seletor.value;
-
     const { data, error } = await db.from('usuarios').select('*').order('id');
 
     if (error) {
@@ -43,64 +43,53 @@ async function carregarUsuarios(idParaSelecionar) {
         saldoEl.textContent = 'Erro ao carregar';
         return;
     }
-
     usuarios = data;
-    seletor.innerHTML = '<option value="">Selecione um usuário</option>';
-
+    seletor.innerHTML = '<option value = ""> Selecione um usuário</option>';
     usuarios.forEach(function (u) {
         const opcao = document.createElement('option');
         opcao.value = u.id;
         opcao.textContent = u.nome;
         seletor.appendChild(opcao);
+
     });
 
     if (selecionado) {
         seletor.value = selecionado;
     }
-
     mostrarSaldo();
     carregarExtrato();
 }
-
 function mostrarSaldo() {
     const usuario = usuarios.find(function (u) {
         return u.id === Number(seletor.value);
     });
-
-    saldoEl.textContent = usuario ? formatarMoeda(usuario.saldo) : 'R$ --';
-
+    saldoEl.textContent = usuario ? formatarMoeda(usuario.saldo) : ' R$ --';
     cartaoNomeEl.textContent = usuario
         ? usuario.nome.toUpperCase()
         : 'SELECIONE UM USUÁRIO';
 
     cartaoNumeroEl.textContent = usuario
-        ? '•••• •••• •••• ' + String(usuario.id).padStart(4, '0')
-        : '•••• •••• •••• ••••';
+        ? ' XXXX XXXX XXXX ' + String(usuario.id).padStart(4, '0') :
+        'XXXX XXXX XXXX XXXX ';
 }
+
 async function carregarExtrato() {
     const id = Number(seletor.value);
     if (!id) {
-        transferencias = [];
+        transferencias = []
         extratoEl.innerHTML = '';
         return;
     }
 
-    const { data, error } = await db
-        .from('extrato')
-        .select('*')
-        .eq('usuario_id', id)
-        .order('criado_em', { ascending: false });
-
+    const { data, error } = await db.from('extrato').select('*').eq('usuario_id', id).order('criado_em', { ascending: false });
     if (error) {
         console.error(error);
         extratoEl.textContent = 'Erro ao carregar o extrato';
         return;
     }
-
     transferencias = data;
     renderizarExtrato();
 }
-
 function renderizarExtrato() {
     const dias = periodoEl.value;
     const limite = dias === 'tudo'
@@ -109,7 +98,6 @@ function renderizarExtrato() {
 
     const lista = transferencias.filter(function (t) {
         const ehSaida = t.tipo === 'saida';
-
         if (filtroTipo === 'entradas' && ehSaida) {
             return false;
         }
@@ -121,9 +109,7 @@ function renderizarExtrato() {
         }
         return true;
     });
-
     extratoEl.innerHTML = '';
-
     if (lista.length === 0) {
         const vazio = document.createElement('li');
         vazio.className = 'vazio';
@@ -131,7 +117,6 @@ function renderizarExtrato() {
         extratoEl.appendChild(vazio);
         return;
     }
-
     lista.forEach(function (t) {
         const ehSaida = t.tipo === 'saida';
 
@@ -164,6 +149,7 @@ function renderizarExtrato() {
         extratoEl.appendChild(li);
     });
 }
+
 function criarLinha(rotulo, valor) {
     const linha = document.createElement('div');
     linha.className = 'linha';
@@ -173,13 +159,12 @@ function criarLinha(rotulo, valor) {
 
     const v = document.createElement('strong');
     v.textContent = valor;
-
     linha.appendChild(r);
     linha.appendChild(v);
     return linha;
 }
 
-function abrirConfirmacao(destinatario, valor) {
+function abrirConfirmação(destinario, valor) {
     modalConteudoEl.innerHTML = '';
 
     const titulo = document.createElement('h3');
@@ -191,23 +176,22 @@ function abrirConfirmacao(destinatario, valor) {
     btnCancelar.textContent = 'Cancelar';
     btnCancelar.addEventListener('click', function () {
         modalEl.close();
-    });
 
+    });
     const btnConfirmar = document.createElement('button');
     btnConfirmar.type = 'button';
     btnConfirmar.textContent = 'Confirmar';
     btnConfirmar.addEventListener('click', function () {
-        confirmarTransferencia(destinatario, valor, btnConfirmar);
+        confirmarTransferencia(destinario, valor, btnConfirmar);
     });
-
     const acoes = document.createElement('div');
     acoes.className = 'acoes';
     acoes.appendChild(btnCancelar);
     acoes.appendChild(btnConfirmar);
 
     modalConteudoEl.appendChild(titulo);
-    modalConteudoEl.appendChild(criarLinha('Para', destinatario.nome));
-    modalConteudoEl.appendChild(criarLinha('Chave Pix', destinatario.chave_pix));
+    modalConteudoEl.appendChild(criarLinha('Para', destinario.nome));
+    modalConteudoEl.appendChild(criarLinha('Chave Pix', destinario.chave_pix));
     modalConteudoEl.appendChild(criarLinha('Valor', formatarMoeda(valor)));
     modalConteudoEl.appendChild(acoes);
 
@@ -219,7 +203,7 @@ function mostrarComprovante(remetente, destinatario, valor) {
 
     const icone = document.createElement('div');
     icone.className = 'icone-ok';
-    icone.textContent = '✓';
+    icone.textContent = '✔';
 
     const titulo = document.createElement('h3');
     titulo.textContent = 'Transferência realizada';
@@ -231,12 +215,11 @@ function mostrarComprovante(remetente, destinatario, valor) {
     const btnFechar = document.createElement('button');
     btnFechar.type = 'button';
     btnFechar.textContent = 'Fechar';
-    btnFechar.addEventListener('click', function () {
+    btnFechar.addEventListener(`click`, function () {
         modalEl.close();
     });
-
     const acoes = document.createElement('div');
-    acoes.className = 'acoes';
+    acoes.className = ' acoes';
     acoes.style.gridTemplateColumns = '1fr';
     acoes.appendChild(btnFechar);
 
@@ -245,8 +228,9 @@ function mostrarComprovante(remetente, destinatario, valor) {
     modalConteudoEl.appendChild(valorGrande);
     modalConteudoEl.appendChild(criarLinha('De', remetente.nome));
     modalConteudoEl.appendChild(criarLinha('Para', destinatario.nome));
-    modalConteudoEl.appendChild(criarLinha('Data e hora', new Date().toLocaleString('pt-BR')));
+    modalConteudoEl.appendChild(criarLinha('Data e hora', new Date().toLocaleDateString('pt-BR')));
     modalConteudoEl.appendChild(acoes);
+
 }
 
 async function confirmarTransferencia(destinatario, valor, botaoConfirmar) {
@@ -262,29 +246,24 @@ async function confirmarTransferencia(destinatario, valor, botaoConfirmar) {
         p_chave_destino: destinatario.chave_pix,
         p_valor: valor
     });
-
     if (error) {
         modalEl.close();
         mostrarMensagem(error.message, 'erro');
         return;
     }
-
     mostrarComprovante(remetente, destinatario, valor);
     mostrarMensagem('', '');
     form.reset();
     await carregarUsuarios();
 }
-
 function abrirDeposito() {
     if (!seletor.value) {
         mostrarMensagem('Selecione quem você é antes de adicionar saldo.', 'erro');
         return;
     }
-
     modalConteudoEl.innerHTML = '';
-
     const titulo = document.createElement('h3');
-    titulo.textContent = 'Adicionar saldo (simulado)';
+    titulo.textContent = 'Adicionar saldo(simulado)';
 
     const rotulo = document.createElement('label');
     rotulo.textContent = 'Valor (R$)';
@@ -305,18 +284,16 @@ function abrirDeposito() {
     btnCancelar.addEventListener('click', function () {
         modalEl.close();
     });
-
     const btnConfirmar = document.createElement('button');
     btnConfirmar.type = 'button';
     btnConfirmar.textContent = 'Adicionar';
     btnConfirmar.addEventListener('click', function () {
         confirmarDeposito(Number(campo.value), btnConfirmar, erroEl);
     });
-
     const acoes = document.createElement('div');
     acoes.className = 'acoes';
-    acoes.appendChild(btnCancelar);
     acoes.appendChild(btnConfirmar);
+    acoes.appendChild(btnCancelar);
 
     modalConteudoEl.appendChild(titulo);
     modalConteudoEl.appendChild(rotulo);
@@ -325,6 +302,29 @@ function abrirDeposito() {
     modalConteudoEl.appendChild(acoes);
 
     modalEl.showModal();
+}
+
+async function confirmarDeposito(valor, botaoConfirmar, erroEl) {
+    if (!valor || valor <= 0) {
+        erroEl.textContent = 'Informe um valor válido.';
+        return;
+    }
+    erroEl.textContent = '';
+    botaoConfirmar.disabled = true;
+    botaoConfirmar.textContent = 'Processando...';
+
+    const { error } = await db.rpc('depositar', {
+        p_usuario_id: Number(seletor.value),
+        p_valor: valor
+    });
+    if (error) {
+        erroEl.textContent = error.message;
+        botaoConfirmar.disabled = false;
+        botaoConfirmar.textContent = 'Adicionar';
+        return;
+    }
+    modalEl.close();
+    await carregarUsuarios();
 }
 function abrirCadastro() {
     modalConteudoEl.innerHTML = '';
@@ -358,14 +358,12 @@ function abrirCadastro() {
     btnCancelar.addEventListener('click', function () {
         modalEl.close();
     });
-
     const btnConfirmar = document.createElement('button');
     btnConfirmar.type = 'button';
     btnConfirmar.textContent = 'Criar conta';
     btnConfirmar.addEventListener('click', function () {
         confirmarCadastro(campoNome.value.trim(), campoChave.value.trim(), btnConfirmar, erroEl);
     });
-
     const acoes = document.createElement('div');
     acoes.className = 'acoes';
     acoes.appendChild(btnCancelar);
@@ -380,6 +378,7 @@ function abrirCadastro() {
     modalConteudoEl.appendChild(acoes);
 
     modalEl.showModal();
+
 }
 
 async function confirmarCadastro(nome, chave, botaoConfirmar, erroEl) {
@@ -387,52 +386,23 @@ async function confirmarCadastro(nome, chave, botaoConfirmar, erroEl) {
         erroEl.textContent = 'Preencha o nome e a chave Pix.';
         return;
     }
-
     erroEl.textContent = '';
     botaoConfirmar.disabled = true;
     botaoConfirmar.textContent = 'Criando...';
-
     const { data, error } = await db.rpc('criar_usuario', {
         p_nome: nome,
         p_chave: chave
     });
-
     if (error) {
         erroEl.textContent = error.message;
         botaoConfirmar.disabled = false;
         botaoConfirmar.textContent = 'Criar conta';
         return;
     }
-
     modalEl.close();
     await carregarUsuarios(data);
 }
 
-async function confirmarDeposito(valor, botaoConfirmar, erroEl) {
-    if (!valor || valor <= 0) {
-        erroEl.textContent = 'Informe um valor válido.';
-        return;
-    }
-
-    erroEl.textContent = '';
-    botaoConfirmar.disabled = true;
-    botaoConfirmar.textContent = 'Processando...';
-
-    const { error } = await db.rpc('depositar', {
-        p_usuario_id: Number(seletor.value),
-        p_valor: valor
-    });
-
-    if (error) {
-        erroEl.textContent = error.message;
-        botaoConfirmar.disabled = false;
-        botaoConfirmar.textContent = 'Adicionar';
-        return;
-    }
-
-    modalEl.close();
-    await carregarUsuarios();
-}
 function transferir(event) {
     event.preventDefault();
 
@@ -440,14 +410,12 @@ function transferir(event) {
         mostrarMensagem('Selecione quem você é antes de transferir.', 'erro');
         return;
     }
-
     const chave = chaveEl.value.trim();
     const valor = Number(valorEl.value);
 
     const remetente = usuarios.find(function (u) {
         return u.id === Number(seletor.value);
     });
-
     const destinatario = usuarios.find(function (u) {
         return u.chave_pix === chave.toLowerCase();
     });
@@ -456,31 +424,30 @@ function transferir(event) {
         mostrarMensagem('Chave Pix não encontrada', 'erro');
         return;
     }
-
     if (destinatario.id === remetente.id) {
         mostrarMensagem('Não é possível transferir para você mesmo', 'erro');
         return;
     }
-
     if (valor > Number(remetente.saldo)) {
         mostrarMensagem('Saldo insuficiente', 'erro');
         return;
     }
-
     mostrarMensagem('', '');
-    abrirConfirmacao(destinatario, valor);
+    abrirConfirmação(destinatario, valor);
 }
-
 seletor.addEventListener('change', function () {
     mostrarSaldo();
     carregarExtrato();
 });
+
 form.addEventListener('submit', transferir);
+
 modalEl.addEventListener('click', function (event) {
     if (event.target === modalEl) {
         modalEl.close();
     }
 });
+
 abasEl.forEach(function (aba) {
     aba.addEventListener('click', function () {
         filtroTipo = aba.dataset.tipo;
@@ -489,11 +456,11 @@ abasEl.forEach(function (aba) {
             a.classList.remove('ativa');
         });
         aba.classList.add('ativa');
-
         renderizarExtrato();
     });
 });
 btnDepositoEl.addEventListener('click', abrirDeposito);
 btnCadastroEl.addEventListener('click', abrirCadastro);
 periodoEl.addEventListener('change', renderizarExtrato);
+
 carregarUsuarios();
